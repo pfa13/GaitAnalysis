@@ -31,7 +31,6 @@ This project uses **pose estimation** to track body movement from video and comp
 
 - Python 3.x
 - OpenCV
-- MediaPipe
 - NumPy
 - Matplotlib
 
