@@ -53,11 +53,14 @@ Place your walking videos inside the `data/` folder.
 
 ## ⚙️ Installation
 
-Clone the repository and install dependencies:
+## ⚙️ Installation
 
+To set up the environment, follow these steps:
+
+### 1. Create a virtual environment (recommended)
 ```bash
-git clone https://github.com/pfa13/gait-analysis.git
-cd gait-analysis
+python -m venv gaitenv
+.\gaitenv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 

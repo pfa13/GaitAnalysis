@@ -1,22 +1,17 @@
 import numpy as np
 
-class GaitAnalyzer:
-    def __init__(self):
-        self.step_count = 0
-        self.positions = []
+class GaitMetrics:
+    def __init__(self, motion_series):
+        self.motion = np.array(motion_series)
 
-    def update(self, left_ankle, right_ankle):
-        self.positions.append((left_ankle, right_ankle))
+    def average_motion(self):
+        return float(np.mean(self.motion))
 
-    def compute_step_length(self):
-        distances = []
-        for i in range(1, len(self.positions)):
-            prev = self.positions[i-1]
-            curr = self.positions[i]
+    def variability(self):
+        return float(np.std(self.motion))
 
-            dist = np.linalg.norm(
-                np.array(curr[0]) - np.array(prev[0])
-            )
-            distances.append(dist)
+    def movement_frequency(self):
+        diff = np.diff(self.motion)
 
-        return np.mean(distances) if distances else 0
+        peaks = np.sum((diff[:-1] > 0) & (diff[1:] < 0))
+        return int(peaks)
