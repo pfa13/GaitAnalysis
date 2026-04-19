@@ -1,71 +1,101 @@
 import cv2
+import matplotlib.pyplot as plt
+
+from src.dataset_loader import DatasetLoader
+from src.motion_detector import MotionDetector
+from src.gait_metrics import GaitMetrics
+from src.exporter import Exporter
+
 import os
+os.makedirs("results/plots", exist_ok=True)
 
-from dataset_loader import DatasetLoader
-from motion_detector import MotionDetector
-from gait_metrics import GaitMetrics
-from visualizer import Visualizer
+def get_participant(video_path):
+    parts = video_path.split("\\")
+    for p in parts:
+        if "participant" in p.lower():
+            return p
+    return "unknown"
 
-def find_video_file(root_path):
-    for dirpath, _, filenames in os.walk(root_path):
-        for file in filenames:
-            if file.endswith(".mp4"):
-                return os.path.join(dirpath, file)
-    return None
-
-# 1. LOAD DATASET
+# LOAD DATASET
 loader = DatasetLoader()
 dataset_path = loader.download()
+video_files = loader.find_all_videos()
 
-files = loader.list_files()
+print(f"Found {len(video_files)} videos")
 
-video_file = find_video_file(dataset_path)
+all_results = []
 
-if video_file is None:
-    raise Exception("No video file found in dataset")
+# PROCESS ALL VIDEOS
+for video_file in video_files:
+    print(f"\nProcessing: {video_file}")
 
-# 2. PROCESS VIDEO
-cap = cv2.VideoCapture(video_file)
+    cap = cv2.VideoCapture(video_file)
+    detector = MotionDetector()
 
-detector = MotionDetector()
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
+        detector.process_frame(frame)
 
-    motion = detector.process_frame(frame)
+    cap.release()
 
-    cv2.putText(
-        frame,
-        f"Motion: {motion:.2f}",
-        (20, 40),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1,
-        (0, 255, 0),
-        2
-    )
+    motion_series = detector.get_motion_series()
 
-    cv2.imshow("Gait Analysis", frame)
+    if len(motion_series) == 0:
+        continue
 
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+    metrics = GaitMetrics(motion_series)
 
-cap.release()
-cv2.destroyAllWindows()
+    # identify participant
+    participant = get_participant(video_file)
 
-# 3. METRICS
-motion_series = detector.get_motion_series()
+    result = {
+        "video": video_file,
+        "participant": participant,
+        "avg_motion": metrics.average_motion(),
+        "variability": metrics.variability(),
+        "frequency": metrics.movement_frequency()
+    }
 
-metrics = GaitMetrics(motion_series)
+    all_results.append(result)
 
-print("\n📊 RESULTS")
-print("Average motion:", metrics.average_motion())
-print("Variability:", metrics.variability())
-print("Movement frequency:", metrics.movement_frequency())
+# EXPORT CSV
+exporter = Exporter()
+exporter.save_to_csv(all_results)
 
-# -------------------------
-# 4. VISUALIZATION
-# -------------------------
-viz = Visualizer()
-viz.plot_motion(motion_series)
+# ANALYSIS
+print("\n📊 SUMMARY ANALYSIS\n")
+
+avg_motion = [r["avg_motion"] for r in all_results]
+variability = [r["variability"] for r in all_results]
+frequency = [r["frequency"] for r in all_results]
+
+print("Average motion (global):", sum(avg_motion)/len(avg_motion))
+print("Average variability:", sum(variability)/len(variability))
+print("Average frequency:", sum(frequency)/len(frequency))
+
+# PLOTS
+plt.figure()
+plt.bar(range(len(avg_motion)), avg_motion)
+plt.title("Average Motion per Video")
+plt.xlabel("Video Index")
+plt.ylabel("Motion")
+plt.savefig("results/plots/avg_motion.png")
+
+plt.figure()
+plt.bar(range(len(variability)), variability)
+plt.title("Variability per Video")
+plt.xlabel("Video Index")
+plt.ylabel("Variability")
+plt.savefig("results/plots/variability.png")
+
+plt.figure()
+plt.bar(range(len(frequency)), frequency)
+plt.title("Frequency per Video")
+plt.xlabel("Video Index")
+plt.ylabel("Frequency")
+plt.savefig("results/plots/frequency.png")
+
+plt.show()

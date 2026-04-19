@@ -49,7 +49,7 @@ Nicolás Cañas Muñoz-Blanco \\
 Abderrahmene Chikh \\
 Jonhas Fortem Mbah \\
 Supervisor(s): Prof. Pau Climent} % Sets the supervisor of the paper / thesis     
-\date{2026-02-04}                   % Sets the document date.
+\date{2026-04-19}                   % Sets the document date.
 
 % \renewcommand{\familydefault}{\sfdefault} % Changes the default font to one without serifs
 
@@ -57,10 +57,163 @@ Supervisor(s): Prof. Pau Climent} % Sets the supervisor of the paper / thesis
 \begin{document}
 \pagenumbering{gobble} % Stops counting the pages from this point until changed again.
 \maketitle
-
 \begin{abstract}
+This project explores a lightweight approach to gait analysis using video data. Instead of relying on pose estimation, motion is quantified through frame differencing to generate a temporal signal of movement. From this signal, features such as average motion, variability, and movement frequency are extracted to characterize walking patterns.
+
+The method is applied to multiple videos from a public dataset, enabling comparison across subjects. Results suggest that simple motion-based features can capture relevant differences in gait behavior, providing a robust and accessible alternative for exploratory analysis.
 \end{abstract}
+\begin{center}
+    \vfill
+    \begin{figure}
+        \centering
+        \begin{subfigure}{.3\textwidth}
+          \centering
+          \includegraphics[width=.8\linewidth]{./assets/ua.png}
+        \end{subfigure}%
+        \begin{subfigure}{.3\textwidth}
+          \centering
+          \includegraphics[width=.8\linewidth]{./assets/eps.png}
+        \end{subfigure}
+        \end{figure}
+        \setcounter{figure}{0}
+        
+    University of Alicante
+\end{center}
+\newpage
+\renewcommand*\contentsname{Table of Contents} % This controls the title of your table of contents.
+{
+\hypersetup{linkcolor=}
+\setcounter{tocdepth}{5} % Sets the maximum sublevel to be displayed within the table of contents.
+\tableofcontents
+}
+\newpage
+\pagenumbering{arabic}\setstretch{1.5}
 
 \section{Introduction}
+Gait analysis has become an important tool in the assessment of human health, particularly in the context of neurological disorders such as Parkinson’s disease and dementia. These conditions often manifest through subtle changes in walking patterns, including reduced step length, decreased speed, and increased irregularity. Detecting and quantifying such changes can provide valuable insights for early diagnosis and monitoring.
+
+Traditional approaches to gait analysis frequently rely on specialized hardware or advanced pose estimation techniques, which may be computationally expensive or difficult to deploy in real-world environments. In contrast, recent advances in computer vision have opened the possibility of extracting meaningful information from standard video recordings, offering a more accessible alternative.
+
+In this project, we propose a simplified method for gait analysis that avoids complex pose estimation models and instead focuses on motion-based features derived from video data. By computing frame-to-frame differences, we obtain a temporal representation of movement intensity, which can be analyzed to extract key gait characteristics. This approach prioritizes robustness and reproducibility while maintaining sufficient descriptive power for comparative analysis.
+
+The main objective is to evaluate whether such a lightweight method can capture relevant variations in walking behavior across different subjects. To this end, we process multiple videos from a publicly available dataset and compute statistical descriptors that reflect movement intensity, variability, and periodicity. The results are then used to explore differences in gait patterns and discuss their potential implications in the context of health-related analysis.
+
+\section{Background}
+Gait analysis has been widely studied as a non-invasive method for assessing human mobility and detecting potential health issues. In particular, neurological disorders such as Parkinson’s disease and dementia often manifest through alterations in walking patterns, including reduced step length, slower speed, and increased variability. As a result, analyzing gait has become a valuable tool for both clinical evaluation and early detection of such conditions.
+
+\subsection{Gait Analysis in Healthcare}
+In clinical settings, gait analysis is commonly used to evaluate motor function and monitor disease progression. Traditional indicators include parameters such as stride length, cadence, and walking speed, which provide insight into the stability and coordination of movement. For example, patients with Parkinson’s disease typically exhibit bradykinesia (slowness of movement) and reduced stride length, while individuals with cognitive impairments may show irregular or unstable gait patterns.
+
+These characteristics make gait a relevant biomarker for neurological conditions, particularly in elderly populations. However, accurate measurement of these parameters often requires controlled environments and specialized equipment.
+
+\subsection{Traditional Approaches}
+Conventional gait analysis methods rely on hardware-based systems such as motion capture setups, force plates, or wearable sensors. Motion capture systems provide precise kinematic data by tracking markers placed on the body, while wearable devices (e.g., accelerometers and gyroscopes) enable continuous monitoring of movement in real-world scenarios.
+
+Although these approaches offer high accuracy, they present several limitations. Motion capture systems are expensive and require laboratory conditions, while wearable sensors depend on user compliance and may introduce noise or variability due to placement differences. These constraints limit their scalability and accessibility for large-scale or low-cost applications.
+
+\subsection{Computer Vision Approaches}
+Recent advances in computer vision have enabled gait analysis using video data, providing a more accessible alternative to traditional methods. Many approaches rely on pose estimation techniques, which detect and track body keypoints to reconstruct human motion. These methods allow the extraction of detailed biomechanical features, such as joint angles and step length.
+
+However, pose estimation models can be computationally demanding and sensitive to factors such as lighting conditions, occlusions, and camera quality. In addition, their deployment may be limited in environments with constrained computational resources.
+
+As an alternative, simpler motion-based methods have been proposed, focusing on global movement patterns rather than precise body geometry. Techniques such as frame differencing or optical flow can capture temporal variations in motion without requiring explicit body modeling. While these approaches provide less detailed information, they offer increased robustness and efficiency.
+
+\subsection{Motivation for the Proposed Approach}
+
+Given the trade-off between accuracy and complexity, this project adopts a lightweight motion-based approach to gait analysis. By focusing on frame-to-frame changes in video data, the method avoids the need for complex models while still capturing essential characteristics of walking behavior.
+
+This approach is particularly suitable for exploratory analysis and scenarios where computational simplicity and reproducibility are prioritized. Although it does not replace detailed biomechanical analysis, it provides a practical framework for identifying differences in gait patterns across individuals.
+
+\section{Methodology}
+This section describes the methodology followed to perform gait analysis using video data. The proposed approach is designed to be lightweight, avoiding complex pose estimation models while still capturing relevant motion patterns.
+
+\subsection{System overview}
+The system is based on a sequential pipeline that processes video data and extracts motion-based features. The overall workflow can be summarized as follows:
+\begin{enumerate}
+  \item Dataset acquisition and video selection
+  \item Frame-by-frame video processing
+  \item Motion signal extraction using frame differencing
+  \item Feature computation from the motion signal
+  \item Aggregation of results across multiple videos
+\end{enumerate}
+
+This pipeline enables the transformation of raw video data into quantitative descriptors of gait.
+
+\subsection{Dataset}
+The dataset used in this project is obtained from a public repository and contains multiple video recordings of individuals walking. The data is organized into folders corresponding to different participants, each including one or more video sequences.
+
+All videos are automatically downloaded and processed using a custom data loader, which searches for valid video files within the dataset directory structure. This approach ensures scalability and allows the system to operate without manual file selection.
+
+\subsection{Motion extraction}
+To extract gait-related information from video data, a frame differencing technique is employed. This method computes the absolute difference between consecutive frames, capturing changes in pixel intensity that correspond to motion.
+
+Formally, given two consecutive frames 
+\begin{equation}
+M_t = \frac{1}{N} \sum_{i=1}^{N} \left| I_t(i) - I_{t-1}(i) \right|
+\end{equation}
+
+where $I_t$ and $I_{t-1}$ represent two consecutive frames, $N$ is the total number of pixels, and $M_t$ denotes the motion intensity at time $t$.
+
+This process generates a one-dimensional temporal signal representing motion intensity over time. The resulting signal reflects the dynamics of walking, including periodic patterns associated with step cycles.
+
+\subsection{Feature extraction}
+From the motion signal, several statistical features are computed to characterize gait:
+\begin{itemize}
+  \item Average Motion: Represents the overall intensity of movement throughout the video. Higher values indicate more pronounced motion, which may correspond to faster or larger steps.
+  \item Variability (Standard Deviation): Measures fluctuations in motion intensity. Increased variability may indicate irregular gait patterns, which are often associated with neurological conditions.
+  \item Movement Frequency: Approximates gait cadence by detecting peaks in the motion signal. Each peak corresponds to a local maximum in movement, which can be related to step cycles.
+\end{itemize}
+
+These features provide a compact yet informative representation of gait behavior.
+
+\subsection{Multi-video analysis}
+To enable comparative analysis, the methodology processes multiple videos from the dataset. Each video is analyzed independently, and the extracted features are stored along with metadata identifying the corresponding participant.
+
+This allows for:
+\begin{itemize}
+  \item Comparison of gait characteristics across individuals
+  \item Identification of patterns or anomalies
+  \item Aggregation of statistics at the dataset level
+\end{itemize}
+
+By extending the analysis beyond a single video, the system supports a more robust evaluation of gait variability between subjects.
+
+\subsection{Implementation details}
+The system is implemented in Python using standard computer vision and data processing libraries. Video processing is performed using OpenCV, while numerical computations are handled with NumPy. Visualization of results is achieved using Matplotlib.
+
+The design prioritizes simplicity, reproducibility, and ease of extension, making it suitable for exploratory analysis in resource-constrained environments.
+
+\section{Results}
+\subsection{Quantitative results}
+tabla o CSV resumido
+valores medios
+
+\subsection{Visual results}
+gráficas:
+
+motion signal
+barras por vídeo
+comparación
+
+\subsection{Observations}
+diferencias entre sujetos
+patrones interesantes
+
+\section{Discussion}
+¿qué significan los resultados?
+¿se ven diferencias reales?
+¿qué podría indicar Parkinson/dementia?
+¿limitaciones del método?
+
+Ejemplo de ideas:
+método simple pero efectivo
+no mide biomecánica exacta
+sensible a ruido (iluminación, cámara)
+
+\section{Conclusion}
+
+\section{Future work}
+
+\section{References}
 
 \end{document}
