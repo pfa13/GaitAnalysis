@@ -1,57 +1,58 @@
 import csv
-import matplotlib.pyplot as plt
-import numpy as np
-import os
 
-os.makedirs("results/plots", exist_ok=True)
-
-exp1_motion, exp1_var = [], []
-exp2_motion, exp2_var = [], []
-
-# 1. Read the existing data
+data = []
 with open('results/metrics.csv', 'r') as f:
     reader = csv.DictReader(f)
     for row in reader:
-        vid_name = row['video']
-        motion = float(row['avg_motion'])
-        variability = float(row['variability'])
+        data.append(row)
+
+# 1. Calculate the "Normal" baseline for each participant
+baselines = {}
+for row in data:
+    p = row['participant']
+    if p not in baselines:
+        baselines[p] = {'norm_motions': [], 'norm_freqs': []}
+    
+    # We use Experiment 1 as their true normal baseline
+    if "Experiment_1" in row['video']:
+        baselines[p]['norm_motions'].append(float(row['avg_motion']))
+        baselines[p]['norm_freqs'].append(float(row['frequency']))
+
+for p in baselines:
+    baselines[p]['base_mot'] = sum(baselines[p]['norm_motions']) / len(baselines[p]['norm_motions'])
+    baselines[p]['base_freq'] = sum(baselines[p]['norm_freqs']) / len(baselines[p]['norm_freqs'])
+
+# 2. Test every video and make a prediction
+correct = 0
+total = len(data)
+
+print(f"{'Video Run':<15} | {'Actual':<15} | {'Predicted':<15} | {'Match'}")
+print("-" * 60)
+
+for row in data:
+    p = row['participant']
+    actual = "Normal" if "Experiment_1" in row['video'] else "Simulated"
+    
+    mot = float(row['avg_motion'])
+    freq = float(row['frequency'])
+    
+    # PREDICTION LOGIC: 
+    # If their motion drops below 90% of their normal baseline OR frequency changes wildly, predict they are simulating
+    if mot < (baselines[p]['base_mot'] * 0.90) or freq > (baselines[p]['base_freq'] * 1.5):
+        predicted = "Simulated"
+    else:
+        predicted = "Normal"
         
-        # Categorize based on Experiment folder
-        if "Experiment_1" in vid_name:
-            exp1_motion.append(motion)
-            exp1_var.append(variability)
-        elif "Experiment_2" in vid_name:
-            exp2_motion.append(motion)
-            exp2_var.append(variability)
+    if actual == predicted:
+        correct += 1
+        match = "✅"
+    else:
+        match = "❌"
+        
+    # Print a short name for the video to fit the table
+    vid_short = row['video'].split('\\')[-1][:12] 
+    
+    print(f"{vid_short:<15} | {actual:<15} | {predicted:<15} | {match}")
 
-# 2. Calculate Averages
-avg_e1_mot = sum(exp1_motion) / len(exp1_motion) if exp1_motion else 0
-avg_e1_var = sum(exp1_var) / len(exp1_var) if exp1_var else 0
-
-avg_e2_mot = sum(exp2_motion) / len(exp2_motion) if exp2_motion else 0
-avg_e2_var = sum(exp2_var) / len(exp2_var) if exp2_var else 0
-
-print("--- RESULTS ---")
-print(f"Experiment 1 (Normal) -> Avg Motion: {avg_e1_mot:.2f} | Variability: {avg_e1_var:.2f}")
-print(f"Experiment 2 (Simulated) -> Avg Motion: {avg_e2_mot:.2f} | Variability: {avg_e2_var:.2f}")
-
-# 3. Generate Comparison Graph
-labels = ['Avg Motion', 'Variability']
-e1_means = [avg_e1_mot, avg_e1_var]
-e2_means = [avg_e2_mot, avg_e2_var]
-
-x = np.arange(len(labels))
-width = 0.35
-
-fig, ax = plt.subplots()
-ax.bar(x - width/2, e1_means, width, label='Experiment 1 (Normal)')
-ax.bar(x + width/2, e2_means, width, label="Experiment 2 (Simulated)")
-
-ax.set_ylabel('Scores')
-ax.set_title('Gait Metrics: Normal vs Simulated Pathological Gait')
-ax.set_xticks(x)
-ax.set_xticklabels(labels)
-ax.legend()
-
-plt.savefig("results/plots/comparison_chart.png")
-print("Chart saved to results/plots/comparison_chart.png")
+print("-" * 60)
+print(f"Prediction Accuracy: {correct}/{total} ({(correct/total)*100:.1f}%)")
