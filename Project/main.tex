@@ -87,6 +87,7 @@ The method is applied to multiple videos from a public dataset, enabling compari
 \tableofcontents
 }
 \newpage
+
 \pagenumbering{arabic}\setstretch{1.5}
 
 \section{Introduction}
@@ -97,6 +98,8 @@ Traditional approaches to gait analysis frequently rely on specialized hardware 
 In this project, we propose a simplified method for gait analysis that avoids complex pose estimation models and instead focuses on motion-based features derived from video data. By computing frame-to-frame differences, we obtain a temporal representation of movement intensity, which can be analyzed to extract key gait characteristics. This approach prioritizes robustness and reproducibility while maintaining sufficient descriptive power for comparative analysis.
 
 The main objective is to evaluate whether such a lightweight method can capture relevant variations in walking behavior across different subjects. To this end, we process multiple videos from a publicly available dataset and compute statistical descriptors that reflect movement intensity, variability, and periodicity. The results are then used to explore differences in gait patterns and discuss their potential implications in the context of health-related analysis.
+
+\clearpage
 
 \section{Background}
 Gait analysis has been widely studied as a non-invasive method for assessing human mobility and detecting potential health issues. In particular, neurological disorders such as Parkinson’s disease and dementia often manifest through alterations in walking patterns, including reduced step length, slower speed, and increased variability. As a result, analyzing gait has become a valuable tool for both clinical evaluation and early detection of such conditions.
@@ -123,6 +126,7 @@ As an alternative, simpler motion-based methods have been proposed, focusing on 
 Given the trade-off between accuracy and complexity, this project adopts a lightweight motion-based approach to gait analysis. By focusing on frame-to-frame changes in video data, the method avoids the need for complex models while still capturing essential characteristics of walking behavior.
 
 This approach is particularly suitable for exploratory analysis and scenarios where computational simplicity and reproducibility are prioritized. Although it does not replace detailed biomechanical analysis, it provides a practical framework for identifying differences in gait patterns across individuals.
+\clearpage
 
 \section{Methodology}
 This section describes the methodology followed to perform gait analysis using video data. The proposed approach is designed to be lightweight, avoiding complex pose estimation models while still capturing relevant motion patterns.
@@ -182,22 +186,93 @@ By extending the analysis beyond a single video, the system supports a more robu
 The system is implemented in Python using standard computer vision and data processing libraries. Video processing is performed using OpenCV, while numerical computations are handled with NumPy. Visualization of results is achieved using Matplotlib.
 
 The design prioritizes simplicity, reproducibility, and ease of extension, making it suitable for exploratory analysis in resource-constrained environments.
+\clearpage
+
+\clearpage
 
 \section{Results}
-\subsection{Quantitative results}
-tabla o CSV resumido
-valores medios
+To thoroughly evaluate the effectiveness of our lightweight gait analysis pipeline, we have divided the results into two distinct phases. 
 
-\subsection{Visual results}
-gráficas:
+The first phase focuses on the primary feature extraction, presenting the initial data compiled by our system (such as average motion and frequency). The second phase introduces a predictive element, utilizing these features to automatically classify and detect simulated pathological walking patterns.
 
-motion signal
-barras por vídeo
-comparación
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Participant} & \textbf{Avg Motion} & \textbf{Variability} & \textbf{Frequency} \\ \hline
+Participant 1  & 1.23 & 0.28 & 84 \\ \hline
+Participant 1 & 1.09 & 0.34 & 68 \\ \hline
+Participant 2  & 1.58 & 0.20 & 77 \\ \hline
+Participant 2 & 1.22 & 0.19 & 70 \\ \hline
+Participant 3 & 2.18 & 0.32 & 68 \\ \hline
+\end{tabular}
+\caption{Sample extract from metrics.csv showcasing the raw extracted features for each condition. The full dataset contains 144 individual video recordings.}
+\label{tab:metrics_sample}
+\end{table}
 
-\subsection{Observations}
-diferencias entre sujetos
-patrones interesantes
+\subsection{Phase 1: Feature Extraction and Gait Comparison}
+% This section covers the baseline metrics and analysis.
+In the initial multi-video analysis, the system processed continuous time-series data to extract key quantitative features from the subjects. We compared normal walking (Experiment 1) against simulated pathological walking (Experiments 2 and 3) across all participants. The resulting data, originally output as a CSV metrics file, revealed distinct differences in the walking patterns.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{results/plots/avg_motion.png}
+    \caption{Comparison of Average Motion across all experiments. A noticeable reduction in pixel motion is visible during the simulated conditions.}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{results/plots/variability.png}
+    \caption{Gait variability measurements. Increased variability often correlates with a loss of rhythmic motor control.}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{results/plots/frequency.png}
+    \caption{Step frequency (cadence) recorded across the different experiments.}
+\end{figure}
+
+As illustrated in the figures above, the simulated pathological conditions consistently resulted in a noticeably lower average motion. This observation aligns physiologically with the shorter, stiffer stride lengths typical of conditions like Parkinson's disease. Furthermore, analyzing variability and step frequency on an individual level highlighted distinct changes in the rhythm and regularity of the participants' steps when simulating a pathological gait compared to their baseline.
+
+% ---------------------------------------------------------
+% Next will be Phase 2: Predictive Classification (Your part)
+% ---------------------------------------------------------
+\clearpage
+
+\section{Predictive Classification for Ambient Monitoring}
+
+\subsection{The Application: Unobtrusive Care}
+Beyond extracting exploratory features, a primary goal of modern gait analysis is automated anomaly detection in natural environments. Traditional gait assessments require patients to visit a clinic, which only captures a brief, unnatural snapshot of their mobility. Wearable sensors (like smartwatches or fall monitors) are often forgotten or rejected by elderly patients due to discomfort. 
+
+By utilizing our lightweight, camera-based approach, this system could be passively installed in ambient assisted living facilities, such as nursing homes or smart domestic environments. Operating entirely in the background, it would continuously and unobtrusively monitor residents without requiring them to wear any physical devices, acting as an automated early-warning system for declining motor health.
+
+\subsection{Methodology: Personalized Baselines}
+To demonstrate this potential, we developed a predictive classification algorithm. Rather than comparing a patient to a generic global average, the algorithm establishes a personalized "Normal" baseline for each individual based on their standard walking data (Experiment 1). 
+
+It then continuously evaluates all subsequent movements against this personalized signature. If the system detects a relative deviation in total motion of more than 25\% (indicating shuffling or erratic steps), or an increase in motion variability of more than 15\% (indicating a loss of rhythmic motor control), it automatically flags the walk as a "Pathological Gait."
+
+\subsection{Predictive Results}
+Applying this automated prediction algorithm to the dataset yielded highly promising results. By testing every video run against the personalized baseline of the respective participant, the system successfully identified whether a walk was Normal or Simulated Pathological with an overall accuracy of \textbf{77.1\% (111 correct predictions out of 144 runs)}. 
+
+This confirms that simple, lightweight motion and variability thresholds are robust enough to detect significant gait anomalies. By proving this concept with standard video data, this project lays the groundwork for a highly scalable, privacy-respecting, and computationally cheap monitoring system for the elderly.
+
+\subsection{Ethical Considerations and Privacy}
+While ambient camera monitoring provides significant health benefits, it introduces substantial privacy and ethical concerns, particularly in sensitive environments like nursing homes or private residences. Continuous video recording raises issues of consent, autonomy, and the risk of data exposure. 
+
+However, the frame-differencing methodology utilized in this project offers a built-in privacy solution: \textbf{Edge Computing}. Because the algorithm only requires the mathematical difference in pixel intensity, the raw video footage does not need to be saved or transmitted to a cloud server. The camera can process the frames locally in real-time, extract the 1D numerical motion signal, and immediately delete the visual footage. By only transmitting anonymous motion numbers (rather than actual video of the patient), this system can provide continuous health monitoring while strictly preserving patient privacy.
+
+\subsection{Prediction Results}
+Applying this automated prediction algorithm to the dataset yielded highly promising results. By testing every video run against the personalized baseline of the respective participant, the system successfully identified whether a walk was Normal or Simulated Pathological with an overall accuracy of \textbf{77.1\% (111 correct predictions out of 144 runs)}. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{results/plots/prediction_matrix.png}
+    \caption{Confusion Matrix displaying the performance of the predictive classification algorithm. The model achieved high accuracy in identifying simulated pathological gaits based purely on motion and variability thresholds.}
+\end{figure}
+
+This confirms that simple, lightweight motion and variability thresholds are robust enough to detect significant gait anomalies. By proving this concept with standard video data, this project lays the groundwork for a highly scalable, privacy-respecting monitoring system for the elderly.
+
+
 
 \section{Discussion}
 ¿qué significan los resultados?
